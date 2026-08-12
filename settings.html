@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
+
+    <title>白名单 - Bili Filter</title>
+
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/settings.css">
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- 顶部导航 -->
+        <header class="header">
+            <div class="header__inner">
+
+                <a href="index.html" class="back-button">
+                    <span aria-hidden="true">←</span>
+                    <span>返回</span>
+                </a>
+
+                <div class="header__title">
+                    白名单
+                </div>
+
+                <div class="header__placeholder"></div>
+
+            </div>
+        </header>
+
+
+        <main class="main">
+
+            <!-- 页面说明 -->
+            <section class="page-heading">
+                <h1>永久白名单</h1>
+
+                <p class="page-heading__description">
+                    白名单中的 UP 主发布的视频可以进入你的观看队列。
+                </p>
+            </section>
+
+
+            <!-- 白名单 -->
+            <section class="settings-section">
+
+                <div class="section-heading">
+                    <h2>UP 主</h2>
+
+                    <span
+                        id="whitelist-count"
+                        class="section-heading__count"
+                    >
+                        0
+                    </span>
+                </div>
+
+
+                <!-- Phase 0：占位 -->
+                <div
+                    id="whitelist-list"
+                    class="whitelist-list"
+                >
+                    <div class="empty-state empty-state--small">
+
+                        <div class="empty-state__icon">
+                            ◇
+                        </div>
+
+                        <p>
+                            白名单功能将在下一阶段启用。
+                        </p>
+
+                    </div>
+                </div>
+
+
+                <!-- 添加按钮 -->
+                <button
+                    id="add-whitelist-button"
+                    class="button button--primary button--full"
+                    type="button"
+                    disabled
+                >
+                    ＋ 添加 UP 主
+                </button>
+
+            </section>
+
+
+            <!-- 修改限制 -->
+            <section class="settings-section">
+
+                <div class="section-heading">
+                    <h2>修改限制</h2>
+                </div>
+
+                <div class="info-card">
+
+                    <div class="info-row">
+                        <span>修改周期</span>
+                        <strong>7 天</strong>
+                    </div>
+
+                    <div class="info-row">
+                        <span>新增 UP 主冷静期</span>
+                        <strong>24 小时</strong>
+                    </div>
+
+                    <div class="info-row">
+                        <span>当前状态</span>
+                        <strong class="status status--locked">
+                            Phase 1 启用
+                        </strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+
+        <div
+            id="toast"
+            class="toast"
+            role="status"
+            aria-live="polite"
+        ></div>
+
+    </div>
+
+    <script type="module">
+        import { showToast } from "./js/ui/toast.js";
+
+        const button = document.getElementById("add-whitelist-button");
+
+        button.addEventListener("click", () => {
+            showToast("白名单编辑将在 Phase 1 实现。");
+        });
+    </script>
+
+</body>
+</html>

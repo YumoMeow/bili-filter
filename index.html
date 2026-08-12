@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- 手机端响应式布局的关键 -->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
+
+    <title>Bili Filter</title>
+
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/index.css">
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- 顶部导航 -->
+        <header class="header">
+            <div class="header__inner">
+                <a href="index.html" class="logo">
+                    Bili Filter
+                </a>
+
+                <a href="settings.html" class="header__button">
+                    设置
+                </a>
+            </div>
+        </header>
+
+
+        <!-- 页面主体 -->
+        <main class="main">
+
+            <!-- 页面标题 -->
+            <section class="page-heading">
+                <div>
+                    <h1>今日队列</h1>
+                    <p class="page-heading__description">
+                        只有符合规则的视频才会出现在这里。
+                    </p>
+                </div>
+            </section>
+
+
+            <!-- 预算区域：Phase 0 只占位 -->
+            <section class="budget-card">
+                <div class="budget-card__label">
+                    今日观看预算
+                </div>
+
+                <div class="budget-card__time">
+                    --:--
+                </div>
+
+                <div class="budget-card__description">
+                    Phase 4 开始启用观看预算
+                </div>
+            </section>
+
+
+            <!-- 视频队列 -->
+            <section class="queue-section">
+
+                <div class="section-heading">
+                    <h2>可观看视频</h2>
+                </div>
+
+                <!-- Phase 0 空状态 -->
+                <div class="empty-state">
+                    <div class="empty-state__icon">
+                        ◇
+                    </div>
+
+                    <h2>还没有视频</h2>
+
+                    <p>
+                        白名单中的 UP 主有新视频后，
+                        它们会出现在这里。
+                    </p>
+
+                    <a href="settings.html" class="button button--primary">
+                        管理白名单
+                    </a>
+                </div>
+
+            </section>
+
+        </main>
+
+
+        <!-- Toast -->
+        <div
+            id="toast"
+            class="toast"
+            role="status"
+            aria-live="polite"
+        ></div>
+
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
