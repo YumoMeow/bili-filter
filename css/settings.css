@@ -29,6 +29,353 @@
 
 
 /* ==============================
+   Whitelist item
+   ============================== */
+
+.whitelist-item {
+    min-height: 68px;
+
+    padding: 12px 16px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    border-bottom: 1px solid var(--color-border);
+}
+
+
+.whitelist-item:last-child {
+    border-bottom: 0;
+}
+
+
+.whitelist-item__content {
+    min-width: 0;
+
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+
+.whitelist-item__name {
+    overflow: hidden;
+
+    color: var(--color-text);
+
+    font-size: var(--font-size-normal);
+    font-weight: 500;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.whitelist-item__meta {
+    color: var(--color-text-tertiary);
+
+    font-size: var(--font-size-small);
+
+    font-variant-numeric: tabular-nums;
+}
+
+
+/* ==============================
+   Status
+   ============================== */
+
+.whitelist-status {
+    flex-shrink: 0;
+
+    padding: 4px 8px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+    line-height: 1;
+}
+
+
+.whitelist-status--active {
+    color: #237a3b;
+
+    background: #e8f5e9;
+}
+
+
+.whitelist-status--pending {
+    color: #996c00;
+
+    background: #fff4d6;
+}
+
+
+/* ==============================
+   Remove
+   ============================== */
+
+.whitelist-remove {
+    flex-shrink: 0;
+
+    min-width: 44px;
+    min-height: 40px;
+
+    padding: 0 8px;
+
+    color: var(--color-danger);
+
+    background: transparent;
+
+    border: 0;
+    border-radius: var(--radius-small);
+
+    font-size: var(--font-size-small);
+}
+
+
+.whitelist-remove:hover:not(:disabled) {
+    background: #fff1f0;
+}
+
+
+.whitelist-remove:disabled {
+    color: var(--color-text-tertiary);
+
+    opacity: 0.4;
+}
+
+
+/* ==============================
+   Modification card
+   ============================== */
+
+.modification-card {
+    margin-bottom: var(--space-6);
+
+    padding: 16px;
+
+    background: var(--color-surface);
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-medium);
+}
+
+
+.modification-card__title {
+    margin: 0;
+
+    font-size: 15px;
+    font-weight: 600;
+}
+
+
+.modification-card__description {
+    margin: 6px 0 0;
+
+    color: var(--color-text-secondary);
+
+    font-size: var(--font-size-small);
+    line-height: 1.6;
+}
+
+
+.modification-card--available {
+    border-color: #cfe0ff;
+}
+
+
+.modification-card--locked {
+    background: #fafafa;
+}
+
+
+.modification-card__time {
+    margin-top: 8px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    font-variant-numeric: tabular-nums;
+}
+
+
+/* ==============================
+   Add form
+   ============================== */
+
+.add-form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+}
+
+
+.form-field label {
+    font-size: var(--font-size-small);
+    font-weight: 500;
+}
+
+
+.form-field input {
+    width: 100%;
+    min-height: 46px;
+
+    padding: 0 12px;
+
+    color: var(--color-text);
+    background: var(--color-surface);
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+
+    outline: none;
+}
+
+
+.form-field input:focus {
+    border-color: var(--color-primary);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(22, 119, 255, 0.12);
+}
+
+
+.form-field__hint {
+    color: var(--color-text-tertiary);
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* ==============================
+   Modal
+   ============================== */
+
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+
+    z-index: 500;
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+
+    padding: 16px;
+
+    background: rgba(0, 0, 0, 0.35);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition: opacity 0.2s ease;
+}
+
+
+.modal-backdrop--visible {
+    opacity: 1;
+
+    pointer-events: auto;
+}
+
+
+.modal {
+    width: 100%;
+    max-width: 520px;
+
+    padding: 20px;
+
+    background: var(--color-surface);
+
+    border-radius:
+        var(--radius-large)
+        var(--radius-large)
+        var(--radius-medium)
+        var(--radius-medium);
+
+    box-shadow:
+        0 20px 60px
+        rgba(0, 0, 0, 0.18);
+
+    transform: translateY(20px);
+
+    transition: transform 0.2s ease;
+}
+
+
+.modal-backdrop--visible .modal {
+    transform: translateY(0);
+}
+
+
+.modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 20px;
+}
+
+
+.modal__title {
+    margin: 0;
+
+    font-size: 20px;
+}
+
+
+.modal__close {
+    width: 40px;
+    height: 40px;
+
+    color: var(--color-text-secondary);
+
+    background: transparent;
+
+    border: 0;
+    border-radius: 50%;
+
+    font-size: 22px;
+}
+
+
+.modal__close:hover {
+    background: var(--color-bg);
+}
+
+
+.modal__actions {
+    display: flex;
+
+    gap: 10px;
+
+    margin-top: 20px;
+}
+
+
+.modal__actions .button {
+    flex: 1;
+}
+
+
+/* ==============================
    Info card
    ============================== */
 
@@ -89,60 +436,27 @@
         max-width: 760px;
     }
 
+
     .button--full {
         width: auto;
+
         min-width: 160px;
     }
-}
-
-/* ==============================
-   Whitelist item
-   ============================== */
-
-.whitelist-item {
-    min-height: 64px;
-
-    padding: 12px 16px;
-
-    display: flex;
-    align-items: center;
-
-    border-bottom: 1px solid var(--color-border);
-}
 
 
-.whitelist-item:last-child {
-    border-bottom: 0;
-}
+    .modal-backdrop {
+        align-items: center;
+    }
 
 
-.whitelist-item__content {
-    min-width: 0;
-
-    display: flex;
-    flex-direction: column;
-
-    gap: 3px;
-}
+    .modal {
+        border-radius: var(--radius-large);
+    }
 
 
-.whitelist-item__name {
-    overflow: hidden;
+    .modal__actions .button {
+        flex: 0 0 auto;
 
-    color: var(--color-text);
-
-    font-size: var(--font-size-normal);
-    font-weight: 500;
-
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-
-.whitelist-item__mid {
-    color: var(--color-text-tertiary);
-
-    font-size: var(--font-size-small);
-
-    font-variant-numeric: tabular-nums;
+        min-width: 120px;
+    }
 }

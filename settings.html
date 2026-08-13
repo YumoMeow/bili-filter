@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -10,142 +12,396 @@
 
     <title>白名单 - Bili Filter</title>
 
-    <link rel="stylesheet" href="css/common.css">
-    <link rel="stylesheet" href="css/settings.css">
+    <link
+        rel="stylesheet"
+        href="css/common.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/settings.css"
+    >
+
 </head>
 
+
 <body>
-    <div class="app">
 
-        <!-- 顶部导航 -->
-        <header class="header">
-            <div class="header__inner">
+<div class="app">
 
-                <a href="index.html" class="back-button">
-                    <span aria-hidden="true">←</span>
-                    <span>返回</span>
-                </a>
 
-                <div class="header__title">
-                    白名单
-                </div>
+    <!-- ==========================================
+         Header
+         ========================================== -->
 
-                <div class="header__placeholder"></div>
+    <header class="header">
+
+        <div class="header__inner">
+
+            <a
+                href="index.html"
+                class="back-button"
+            >
+                <span aria-hidden="true">←</span>
+                <span>返回</span>
+            </a>
+
+
+            <div class="header__title">
+                白名单
+            </div>
+
+
+            <div class="header__placeholder"></div>
+
+        </div>
+
+    </header>
+
+
+    <!-- ==========================================
+         Main
+         ========================================== -->
+
+    <main class="main">
+
+
+        <!-- 页面标题 -->
+
+        <section class="page-heading">
+
+            <h1>
+                永久白名单
+            </h1>
+
+            <p class="page-heading__description">
+                白名单中的 UP 主发布的视频可以进入你的观看队列。
+            </p>
+
+        </section>
+
+
+        <!-- ======================================
+             修改状态
+             ====================================== -->
+
+        <section
+            id="modification-card"
+            class="modification-card"
+        >
+
+            <h2
+                id="modification-title"
+                class="modification-card__title"
+            >
+                正在检查白名单状态……
+            </h2>
+
+
+            <p
+                id="modification-description"
+                class="modification-card__description"
+            >
+                请稍候。
+            </p>
+
+
+            <div
+                id="modification-time"
+                class="modification-card__time"
+            ></div>
+
+        </section>
+
+
+        <!-- ======================================
+             白名单
+             ====================================== -->
+
+        <section class="settings-section">
+
+
+            <div class="section-heading">
+
+                <h2>
+                    UP 主
+                </h2>
+
+
+                <span
+                    id="whitelist-count"
+                    class="section-heading__count"
+                >
+                    0
+                </span>
 
             </div>
-        </header>
 
 
-        <main class="main">
-
-            <!-- 页面说明 -->
-            <section class="page-heading">
-                <h1>永久白名单</h1>
-
-                <p class="page-heading__description">
-                    白名单中的 UP 主发布的视频可以进入你的观看队列。
-                </p>
-            </section>
+            <div
+                id="whitelist-list"
+                class="whitelist-list"
+            >
+            </div>
 
 
-            <!-- 白名单 -->
-            <section class="settings-section">
+            <div
+                id="edit-actions"
+                class="edit-actions"
+            >
 
-                <div class="section-heading">
-                    <h2>UP 主</h2>
-
-                    <span
-                        id="whitelist-count"
-                        class="section-heading__count"
-                    >
-                        0
-                    </span>
-                </div>
-
-
-                <!-- Phase 0：占位 -->
-                <div
-                    id="whitelist-list"
-                    class="whitelist-list"
-                >
-                    <div class="empty-state empty-state--small">
-
-                        <div class="empty-state__icon">
-                            ◇
-                        </div>
-
-                        <p>
-                            白名单功能将在下一阶段启用。
-                        </p>
-
-                    </div>
-                </div>
-
-
-                <!-- 添加按钮 -->
                 <button
-                    id="add-whitelist-button"
+                    id="edit-whitelist-button"
                     class="button button--primary button--full"
                     type="button"
-                    disabled
                 >
-                    ＋ 添加 UP 主
+                    编辑白名单
                 </button>
 
-            </section>
+
+                <div
+                    id="draft-actions"
+                    class="draft-actions"
+                    hidden
+                >
+
+                    <button
+                        id="add-whitelist-button"
+                        class="button button--primary"
+                        type="button"
+                    >
+                        ＋ 添加 UP 主
+                    </button>
 
 
-            <!-- 修改限制 -->
-            <section class="settings-section">
+                    <button
+                        id="cancel-edit-button"
+                        class="button"
+                        type="button"
+                    >
+                        取消
+                    </button>
 
-                <div class="section-heading">
-                    <h2>修改限制</h2>
+
+                    <button
+                        id="save-edit-button"
+                        class="button button--primary"
+                        type="button"
+                    >
+                        保存修改
+                    </button>
+
                 </div>
 
-                <div class="info-card">
+            </div>
 
-                    <div class="info-row">
-                        <span>修改周期</span>
-                        <strong>7 天</strong>
-                    </div>
 
-                    <div class="info-row">
-                        <span>新增 UP 主冷静期</span>
-                        <strong>24 小时</strong>
-                    </div>
+        </section>
 
-                    <div class="info-row">
-                        <span>当前状态</span>
-                        <strong class="status status--locked">
-                            Phase 1 启用
-                        </strong>
-                    </div>
+
+        <!-- ======================================
+             规则说明
+             ====================================== -->
+
+        <section class="settings-section">
+
+            <div class="section-heading">
+
+                <h2>
+                    修改规则
+                </h2>
+
+            </div>
+
+
+            <div class="info-card">
+
+
+                <div class="info-row">
+
+                    <span>
+                        白名单修改周期
+                    </span>
+
+                    <strong>
+                        7 天
+                    </strong>
 
                 </div>
 
-            </section>
 
-        </main>
+                <div class="info-row">
 
+                    <span>
+                        新增 UP 主冷静期
+                    </span>
+
+                    <strong>
+                        24 小时
+                    </strong>
+
+                </div>
+
+
+                <div class="info-row">
+
+                    <span>
+                        冷静期期间
+                    </span>
+
+                    <strong>
+                        不进入观看队列
+                    </strong>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- ==========================================
+         Add User Modal
+         ========================================== -->
+
+    <div
+        id="add-modal"
+        class="modal-backdrop"
+        aria-hidden="true"
+    >
 
         <div
-            id="toast"
-            class="toast"
-            role="status"
-            aria-live="polite"
-        ></div>
+            class="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="add-modal-title"
+        >
+
+            <div class="modal__header">
+
+                <h2
+                    id="add-modal-title"
+                    class="modal__title"
+                >
+                    添加 UP 主
+                </h2>
+
+
+                <button
+                    id="modal-close"
+                    class="modal__close"
+                    type="button"
+                    aria-label="关闭"
+                >
+                    ×
+                </button>
+
+            </div>
+
+
+            <form
+                id="add-form"
+                class="add-form"
+            >
+
+
+                <div class="form-field">
+
+                    <label for="user-mid">
+                        UID
+                    </label>
+
+                    <input
+                        id="user-mid"
+                        name="mid"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="off"
+                        placeholder="例如 123456"
+                        required
+                    >
+
+                    <div class="form-field__hint">
+                        当前阶段直接填写 B 站 UID。
+                    </div>
+
+                </div>
+
+
+                <div class="form-field">
+
+                    <label for="user-name">
+                        UP 主名称
+                    </label>
+
+                    <input
+                        id="user-name"
+                        name="name"
+                        type="text"
+                        autocomplete="off"
+                        placeholder="例如 某某足球"
+                        maxlength="50"
+                        required
+                    >
+
+                    <div class="form-field__hint">
+                        名称用于本地显示，后续接入 B 站 API 后可以自动获取。
+                    </div>
+
+                </div>
+
+
+                <div class="modal__actions">
+
+                    <button
+                        id="modal-cancel"
+                        class="button"
+                        type="button"
+                    >
+                        取消
+                    </button>
+
+
+                    <button
+                        class="button button--primary"
+                        type="submit"
+                    >
+                        添加
+                    </button>
+
+                </div>
+
+
+            </form>
+
+        </div>
 
     </div>
 
-    <script type="module">
-        import { showToast } from "./js/ui/toast.js";
 
-        const button = document.getElementById("add-whitelist-button");
+    <!-- Toast -->
 
-        button.addEventListener("click", () => {
-            showToast("白名单编辑将在 Phase 1 实现。");
-        });
-    </script>
+    <div
+        id="toast"
+        class="toast"
+        role="status"
+        aria-live="polite"
+    ></div>
+
+
+</div>
+
+
+<script
+    type="module"
+    src="js/settings.js"
+></script>
+
 
 </body>
+
 </html>

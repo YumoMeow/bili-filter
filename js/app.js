@@ -1,11 +1,5 @@
 /**
- * Bili Filter 前端入口
- *
- * Phase 0：
- *     初始化页面。
- *
- * 以后：
- *     这里负责组装各个 Service 和 UI。
+ * Bili Filter 首页入口
  */
 
 import {
@@ -17,28 +11,19 @@ import {
 } from "./ui/toast.js";
 
 
-/**
- * 页面初始化。
- */
 async function init() {
 
-    console.log(
-        "Bili Filter 正在启动..."
-    );
-
-
-    /*
-     * 检查 Storage 是否正常工作。
-     *
-     * 这里只做最基本的启动检查。
-     */
     try {
 
-        await whitelistService.load();
+        const users =
+            await whitelistService
+                .getActiveUsers();
+
 
         console.log(
-            "Whitelist Service 初始化成功"
+            `当前有 ${users.length} 个 active UP 主。`
         );
+
 
     } catch (error) {
 
@@ -47,21 +32,14 @@ async function init() {
             error
         );
 
+
         showToast(
             "应用初始化失败，请检查控制台。"
         );
     }
-
-
-    console.log(
-        "Bili Filter 启动完成。"
-    );
 }
 
 
-/*
- * DOM 加载完成后启动应用。
- */
 if (
     document.readyState === "loading"
 ) {

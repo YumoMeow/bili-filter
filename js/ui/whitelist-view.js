@@ -1,27 +1,60 @@
 /**
  * 白名单 UI
  *
- * Phase 0：
- *     只负责显示数据。
+ * 负责：
  *
- * Phase 1：
- *     再加入：
- *     - 添加
- *     - 删除
- *     - pending
- *     - 修改状态
+ * - 渲染 UP 主
+ * - 显示 active / pending
+ * - 显示删除按钮
  */
+
+
+import {
+    USER_STATUS
+} from "../models/whitelist.js";
 
 
 /**
- * 渲染白名单列表。
+ * 格式化时间。
+ *
+ * @param {string} iso
+ * @returns {string}
+ */
+function formatDateTime(iso) {
+
+    if (!iso) {
+        return "";
+    }
+
+
+    const date =
+        new Date(iso);
+
+
+    return date.toLocaleString(
+        "zh-CN",
+        {
+            year: "numeric",
+            month: "numeric",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        }
+    );
+}
+
+
+/**
+ * 渲染白名单。
  *
  * @param {HTMLElement} container
  * @param {Array} users
+ * @param {Object} options
  */
 export function renderWhitelist(
     container,
-    users
+    users,
+    options = {}
 ) {
 
     if (!container) {
@@ -29,10 +62,19 @@ export function renderWhitelist(
     }
 
 
+    const {
+        canModify = false,
+        onRemove = null
+    } = options;
+
+
     container.innerHTML = "";
 
 
-    if (!Array.isArray(users) || users.length === 0) {
+    if (
+        !Array.isArray(users)
+        || users.length === 0
+    ) {
 
         const empty =
             document.createElement("div");
@@ -67,25 +109,9 @@ export function renderWhitelist(
             "whitelist-item";
 
 
-        const name =
-            document.createElement("span");
-
-        name.className =
-            "whitelist-item__name";
-
-        name.textContent =
-            user.name;
-
-
-        const mid =
-            document.createElement("span");
-
-        mid.className =
-            "whitelist-item__mid";
-
-        mid.textContent =
-            `UID ${user.mid}`;
-
+        /* ==========================
+           左侧内容
+           ========================== */
 
         const content =
             document.createElement("div");
@@ -94,17 +120,131 @@ export function renderWhitelist(
             "whitelist-item__content";
 
 
+        const name =
+            document.createElement("div");
+
+        name.className =
+            "whitelist-item__name";
+
+        name.textContent =
+            user.name;
+
+
+        const meta =
+            document.createElement("div");
+
+        meta.className =
+            "whitelist-item__meta";
+
+        meta.textContent =
+            `UID ${user.mid}`;
+
+
         content.appendChild(
             name
         );
 
         content.appendChild(
-            mid
+            meta
         );
 
 
+        /* ==========================
+           状态
+           ========================== */
+
+        const status =
+            document.createElement("span");
+
+        status.className =
+            "whitelist-status";
+
+
+        if (
+            user.status
+            === USER_STATUS.ACTIVE
+        ) {
+
+            status.classList.add(
+                "whitelist-status--active"
+            );
+
+            status.textContent =
+                "可观看";
+
+        } else {
+
+            status.classList.add(
+                "whitelist-status--pending"
+            );
+
+            status.textContent =
+                "冷静期";
+
+            if (user.effectiveAt) {
+
+                status.title =
+                    `预计 ${formatDateTime(user.effectiveAt)} 生效`;
+            }
+        }
+
+
+        /* ==========================
+           删除按钮
+           ========================== */
+
+        const removeButton =
+            document.createElement("button");
+
+        removeButton.type =
+            "button";
+
+        removeButton.className =
+            "whitelist-remove";
+
+        removeButton.textContent =
+            "删除";
+
+        removeButton.disabled =
+            !canModify;
+
+
+        if (!canModify) {
+
+            removeButton.title =
+                "白名单目前处于修改锁定期";
+
+        } else {
+
+            removeButton.addEventListener(
+                "click",
+                () => {
+
+                    if (typeof onRemove === "function") {
+
+                        onRemove(
+                            user
+                        );
+                    }
+                }
+            );
+        }
+
+
+        /* ==========================
+           组合
+           ========================== */
+
         item.appendChild(
             content
+        );
+
+        item.appendChild(
+            status
+        );
+
+        item.appendChild(
+            removeButton
         );
 
 

@@ -1,61 +1,91 @@
 /**
  * 白名单数据模型
+ *
+ * Phase 1
+ *
+ * 一个 UP 主可能处于：
+ *
+ * active
+ *     已经正式进入白名单
+ *
+ * pending
+ *     刚刚添加，还处于 24 小时冷静期
  */
+
+
+export const USER_STATUS = {
+    ACTIVE: "active",
+    PENDING: "pending"
+};
+
 
 /**
  * 创建一个 UP 主对象。
  *
- * @param {number|string} mid
+ * @param {string|number} mid
  * @param {string} name
+ * @param {Object} options
  * @returns {Object}
  */
-export function createWhitelistUser(mid, name) {
+export function createWhitelistUser(
+    mid,
+    name,
+    options = {}
+) {
+
     return {
         mid: String(mid),
         name: String(name),
 
-        status: "active",
+        status:
+            options.status
+            ?? USER_STATUS.PENDING,
 
-        addedAt: null,
-        effectiveAt: null
+        addedAt:
+            options.addedAt
+            ?? new Date().toISOString(),
+
+        effectiveAt:
+            options.effectiveAt
+            ?? null
     };
 }
 
 
 /**
- * 创建一个空白名单。
+ * 创建空白名单。
  *
  * @returns {Object}
  */
 export function createEmptyWhitelist() {
+
     return {
         version: 1,
 
         users: [],
 
         lastModifiedAt: null,
+
         nextModifyAt: null
     };
 }
 
 
 /**
- * 判断对象是否看起来像合法的白名单。
- *
- * 这里只做基础的数据结构检查。
- * 复杂业务规则由 whitelist-service 负责。
+ * 判断白名单数据结构是否合法。
  *
  * @param {*} whitelist
  * @returns {boolean}
  */
 export function isValidWhitelist(whitelist) {
-    if (!whitelist || typeof whitelist !== "object") {
+
+    if (
+        !whitelist
+        || typeof whitelist !== "object"
+    ) {
         return false;
     }
 
-    if (!Array.isArray(whitelist.users)) {
-        return false;
-    }
 
     if (
         typeof whitelist.version !== "number"
@@ -63,27 +93,86 @@ export function isValidWhitelist(whitelist) {
         return false;
     }
 
+
+    if (
+        !Array.isArray(whitelist.users)
+    ) {
+        return false;
+    }
+
+
+    if (
+        whitelist.lastModifiedAt !== null
+        && typeof whitelist.lastModifiedAt !== "string"
+    ) {
+        return false;
+    }
+
+
+    if (
+        whitelist.nextModifyAt !== null
+        && typeof whitelist.nextModifyAt !== "string"
+    ) {
+        return false;
+    }
+
+
+    for (const user of whitelist.users) {
+
+        if (
+            !user
+            || typeof user !== "object"
+        ) {
+            return false;
+        }
+
+
+        if (
+            typeof user.mid !== "string"
+            || typeof user.name !== "string"
+        ) {
+            return false;
+        }
+
+
+        if (
+            user.status !== USER_STATUS.ACTIVE
+            && user.status !== USER_STATUS.PENDING
+        ) {
+            return false;
+        }
+    }
+
+
     return true;
 }
 
 
 /**
- * 判断一个 UP 主是否处于 active 状态。
+ * 判断 UP 主是否 active。
  *
  * @param {Object} user
  * @returns {boolean}
  */
 export function isActiveUser(user) {
-    return user?.status === "active";
+
+    return (
+        user?.status
+        === USER_STATUS.ACTIVE
+    );
 }
 
 
 /**
- * 判断一个 UP 主是否处于 pending 状态。
+ * 判断 UP 主是否 pending。
  *
  * @param {Object} user
  * @returns {boolean}
  */
 export function isPendingUser(user) {
-    return user?.status === "pending";
+
+    return (
+        user?.status
+        === USER_STATUS.PENDING
+    );
 }
