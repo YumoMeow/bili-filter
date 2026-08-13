@@ -396,6 +396,10 @@ class BilibiliService {
                     video.cover
                     || "",
 
+                duration:
+                    video.duration
+                    || "",
+
                 author: {
                     name:
                         video.author?.name

@@ -47,6 +47,9 @@ export function createVideo(data, options = {}) {
         cover:
             String(data.cover ?? ""),
 
+        duration:
+            String(data.duration ?? ""),
+
         author: {
             name:
                 String(data.author?.name ?? ""),

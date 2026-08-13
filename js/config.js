@@ -12,7 +12,8 @@ export const CONFIG = {
         appStateKey: "bili_filter_app_state",
         whitelistKey: "bili_filter_whitelist",
         videoQueueKey: "bili_filter_video_queue",
-        videoLastFetchAtKey: "bili_filter_video_last_fetch_at"
+        videoLastFetchAtKey: "bili_filter_video_last_fetch_at",
+        budgetKey: "bili_filter_budget"
     },
 
     whitelist: {
@@ -26,6 +27,7 @@ export const CONFIG = {
     },
 
     budget: {
-        defaultDailyLimitSeconds: 60 * 60
+        defaultDailyLimitSeconds: 90 * 60,
+        resetHour: 5
     }
 };

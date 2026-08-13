@@ -515,13 +515,16 @@ def get_bilibili_user_videos(mid, after=0, page_size=50):
     返回统一的数据结构列表。
 
     带重试：B站风控会间歇性拒绝（412 / -352），
-    失败时稍等后重试一次。
+    最多尝试 4 次，失败间隔 1 / 3 / 6 秒。
     """
 
     last_error = None
 
 
-    for attempt in range(2):
+    delays = [1, 3, 6]
+
+
+    for attempt in range(4):
 
         try:
 
@@ -540,7 +543,11 @@ def get_bilibili_user_videos(mid, after=0, page_size=50):
                 error
             )
 
-            time.sleep(1)
+            if attempt < len(delays):
+
+                time.sleep(
+                    delays[attempt]
+                )
 
 
     raise last_error
@@ -667,6 +674,11 @@ def _fetch_bilibili_user_videos_once(mid, after=0, page_size=50):
             continue
 
 
+        # 过滤充电专属视频
+        if item.get("is_charging_arc"):
+            continue
+
+
         published_at = None
 
 
@@ -682,6 +694,7 @@ def _fetch_bilibili_user_videos_once(mid, after=0, page_size=50):
             "bvid": bvid,
             "title": item.get("title") or "",
             "cover": (item.get("pic") or "").replace("http://", "https://"),
+            "duration": item.get("length") or "",
             "author": {
                 "name": item.get("author") or "",
                 "mid": str(item.get("mid") or mid)

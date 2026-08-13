@@ -23,12 +23,18 @@ let tickerId = null;
  */
 export function renderVideoQueue(
     container,
-    videos
+    videos,
+    options = {}
 ) {
 
     if (!container) {
         return;
     }
+
+
+    const {
+        onWatch = null
+    } = options;
 
 
     container.innerHTML = "";
@@ -69,7 +75,7 @@ export function renderVideoQueue(
     for (const video of videos) {
 
         container.appendChild(
-            buildCard(video)
+            buildCard(video, onWatch)
         );
     }
 
@@ -82,9 +88,10 @@ export function renderVideoQueue(
  * 构建一张视频卡片。
  *
  * @param {Object} video
+ * @param {Function|null} onWatch
  * @returns {HTMLElement}
  */
-function buildCard(video) {
+function buildCard(video, onWatch) {
 
     const card =
         document.createElement("a");
@@ -158,6 +165,50 @@ function buildCard(video) {
     );
 
 
+    const aside =
+        document.createElement("div");
+
+    aside.className =
+        "video-card__aside";
+
+
+    const duration =
+        document.createElement("div");
+
+    duration.className =
+        "video-card__duration";
+
+
+    const durationLabel =
+        document.createElement("div");
+
+    durationLabel.className =
+        "video-card__duration-label";
+
+    durationLabel.textContent =
+        "时长";
+
+
+    const durationText =
+        document.createElement("div");
+
+    durationText.className =
+        "video-card__duration-text";
+
+    durationText.textContent =
+        video.duration
+        || "--:--";
+
+
+    duration.appendChild(
+        durationLabel
+    );
+
+    duration.appendChild(
+        durationText
+    );
+
+
     const countdown =
         document.createElement("div");
 
@@ -199,6 +250,15 @@ function buildCard(video) {
     );
 
 
+    aside.appendChild(
+        duration
+    );
+
+    aside.appendChild(
+        countdown
+    );
+
+
     card.appendChild(
         cover
     );
@@ -208,7 +268,19 @@ function buildCard(video) {
     );
 
     card.appendChild(
-        countdown
+        aside
+    );
+
+
+    card.addEventListener(
+        "click",
+        () => {
+
+            if (typeof onWatch === "function") {
+
+                onWatch(video);
+            }
+        }
     );
 
 

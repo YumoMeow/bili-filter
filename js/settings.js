@@ -49,6 +49,11 @@ import {
 } from "./services/video-service.js";
 
 
+import {
+    budgetService
+} from "./services/budget-service.js";
+
+
 /* ==================================================
    DOM
    ================================================== */
@@ -1420,7 +1425,7 @@ async function handleResetDefault() {
     const confirmed =
         window.confirm(
             "确定要重置为默认吗？\n\n"
-            + "将清空白名单、视频队列和抓取记录，"
+            + "将清空白名单、视频队列、抓取记录和观看预算，"
             + "并恢复为默认白名单。"
         );
 
@@ -1437,6 +1442,10 @@ async function handleResetDefault() {
 
 
         await videoService
+            .reset();
+
+
+        await budgetService
             .reset();
 
 

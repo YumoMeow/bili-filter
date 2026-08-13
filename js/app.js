@@ -15,6 +15,11 @@ import {
 
 
 import {
+    budgetService
+} from "./services/budget-service.js";
+
+
+import {
     renderVideoQueue
 } from "./ui/video-view.js";
 
@@ -58,6 +63,12 @@ const cookieStatus =
     );
 
 
+const budgetTime =
+    document.getElementById(
+        "budget-time"
+    );
+
+
 /* ==================================================
    Queue
    ================================================== */
@@ -73,12 +84,37 @@ async function loadQueue() {
     }
 
 
-    queueContainer.innerHTML =
-        `<div class="empty-state empty-state--small">
-            <p>正在加载视频……</p>
-        </div>`;
+    /*
+     * 先渲染本地已有的视频，
+     * 抓取过程中用户仍能浏览旧队列。
+     */
+    try {
+
+        const existing =
+            await videoService.getVideos();
 
 
+        renderVideoQueue(
+            queueContainer,
+            existing,
+            {
+                onWatch:
+                    handleWatch
+            }
+        );
+
+    } catch (error) {
+
+        console.error(
+            "读取本地视频失败：",
+            error
+        );
+    }
+
+
+    /*
+     * 抓取新视频，完成后直接更新列表。
+     */
     try {
 
         const result =
@@ -91,7 +127,11 @@ async function loadQueue() {
 
         renderVideoQueue(
             queueContainer,
-            videos
+            videos,
+            {
+                onWatch:
+                    handleWatch
+            }
         );
 
 
@@ -108,20 +148,14 @@ async function loadQueue() {
     } catch (error) {
 
         console.error(
-            "加载视频队列失败：",
+            "刷新视频队列失败：",
             error
-        );
-
-
-        renderVideoQueue(
-            queueContainer,
-            []
         );
 
 
         showToast(
             error.message
-            || "加载视频队列失败。"
+            || "刷新视频队列失败。"
         );
     }
 }
@@ -258,6 +292,123 @@ async function handleCookieSubmit(event) {
 
 
 /* ==================================================
+   Budget
+   ================================================== */
+
+
+/**
+ * 把剩余秒数格式化为 时:分:秒。
+ *
+ * @param {number} totalSeconds
+ * @returns {string}
+ */
+function formatBudget(totalSeconds) {
+
+    const seconds =
+        Math.max(
+            0,
+            Math.floor(
+                Number(totalSeconds) || 0
+            )
+        );
+
+
+    const hours =
+        Math.floor(seconds / 3600);
+
+
+    const minutes =
+        Math.floor(
+            (seconds % 3600) / 60
+        );
+
+
+    const secs =
+        seconds % 60;
+
+
+    if (hours > 0) {
+
+        return (
+            `${hours}:`
+            + `${String(minutes).padStart(2, "0")}:`
+            + `${String(secs).padStart(2, "0")}`
+        );
+    }
+
+
+    return (
+        `${minutes}:`
+        + `${String(secs).padStart(2, "0")}`
+    );
+}
+
+
+/**
+ * 更新预算显示。
+ */
+async function renderBudget() {
+
+    if (!budgetTime) {
+        return;
+    }
+
+
+    try {
+
+        const remaining =
+            await budgetService
+                .getRemainingSeconds();
+
+
+        budgetTime.textContent =
+            formatBudget(remaining);
+
+    } catch (error) {
+
+        console.error(
+            "读取预算失败：",
+            error
+        );
+    }
+}
+
+
+/**
+ * 点击视频时扣除完整时长并更新显示。
+ *
+ * @param {Object} video
+ */
+async function handleWatch(video) {
+
+    if (!budgetTime) {
+        return;
+    }
+
+
+    try {
+
+        const budget =
+            await budgetService
+                .deductVideo(video);
+
+
+        budgetTime.textContent =
+            formatBudget(
+                budget.remainingSeconds
+            );
+
+    } catch (error) {
+
+        console.error(
+            "扣除预算失败：",
+            error
+        );
+    }
+}
+
+
+/* ==================================================
    Events
    ================================================== */
 
@@ -288,6 +439,8 @@ if (cookieForm) {
 async function init() {
 
     await loadCookieStatus();
+
+    await renderBudget();
 
     await loadQueue();
 }
