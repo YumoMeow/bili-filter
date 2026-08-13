@@ -33,6 +33,11 @@ import {
 } from "../config.js";
 
 
+import {
+    bilibiliService
+} from "./bilibili-service.js";
+
+
 export class WhitelistService {
 
     constructor(storageAdapter = storage) {
@@ -138,7 +143,10 @@ export class WhitelistService {
 
             const response =
                 await fetch(
-                    this.defaultDataUrl
+                    this.defaultDataUrl,
+                    {
+                        cache: "no-store"
+                    }
                 );
 
 
@@ -169,14 +177,65 @@ export class WhitelistService {
              *
              * 因为这些是工具初始配置，
              * 不应该让用户第一次打开就等 24 小时。
+             *
+             * 只读取 mid，其余信息调用 BilibiliService
+             * 自动补齐（与手动添加 UP 主一致）。
              */
-            whitelist.users =
-                data.users.map(user => {
+            const users = [];
 
-                    return createWhitelistUser(
-                        user.mid,
-                        user.name,
+
+            for (const item of data.users) {
+
+                const mid =
+                    String(item.mid ?? "").trim();
+
+
+                if (!mid) {
+                    continue;
+                }
+
+
+                let userInfo;
+
+
+                try {
+
+                    userInfo =
+                        await bilibiliService
+                            .getUserInfo(mid);
+
+                } catch (error) {
+
+                    console.error(
+                        `初始化默认 UP 主 ${mid} 信息失败：`,
+                        error
+                    );
+
+
+                    userInfo = {
+                        mid,
+                        name:
+                            item.name
+                            || "未知用户",
+                        avatar: "",
+                        fans: 0
+                    };
+                }
+
+
+                users.push(
+                    createWhitelistUser(
+                        userInfo.mid || mid,
+                        userInfo.name || "未知用户",
                         {
+                            avatar:
+                                userInfo.avatar
+                                || "",
+
+                            fans:
+                                userInfo.fans
+                                ?? 0,
+
                             status:
                                 USER_STATUS.ACTIVE,
 
@@ -186,8 +245,12 @@ export class WhitelistService {
                             effectiveAt:
                                 new Date().toISOString()
                         }
-                    );
-                });
+                    )
+                );
+            }
+
+
+            whitelist.users = users;
 
 
         } catch (error) {

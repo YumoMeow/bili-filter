@@ -44,6 +44,37 @@ import {
 } from "./bilibili-service.js";
 
 
+/**
+ * 等待一段时间。
+ *
+ * @param {number} ms
+ * @returns {Promise<void>}
+ */
+function sleep(ms) {
+
+    return new Promise(
+        resolve => {
+            setTimeout(resolve, ms);
+        }
+    );
+}
+
+
+/**
+ * 生成 [min, max] 之间的随机毫秒数。
+ *
+ * @param {number} min
+ * @param {number} max
+ * @returns {number}
+ */
+function randomDelay(min, max) {
+
+    return Math.floor(
+        min + Math.random() * (max - min)
+    );
+}
+
+
 export class VideoService {
 
     constructor(storageAdapter = storage) {
@@ -255,7 +286,25 @@ export class VideoService {
         const errors = [];
 
 
+        let isFirst = true;
+
+
         for (const user of users) {
+
+            /*
+             * 多个 UP 之间加随机间隔，
+             * 降低触发 B 站风控的概率。
+             */
+            if (!isFirst) {
+
+                await sleep(
+                    randomDelay(500, 1500)
+                );
+            }
+
+
+            isFirst = false;
+
 
             try {
 
@@ -350,9 +399,19 @@ export class VideoService {
         await this.saveQueue(queue);
 
 
-        await this.setLastFetchAt(
-            new Date().toISOString()
-        );
+        /*
+         * 只有全部抓取成功时才更新上次抓取时间。
+         *
+         * 如果有任何 UP 抓取失败，则不更新，
+         * 下次重试时仍从原来的时间点开始，
+         * 避免漏掉失败期间发布的视频。
+         */
+        if (errors.length === 0) {
+
+            await this.setLastFetchAt(
+                new Date().toISOString()
+            );
+        }
 
 
         return {

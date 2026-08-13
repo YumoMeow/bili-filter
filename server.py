@@ -15,7 +15,7 @@ from urllib.parse import urlparse, parse_qs, quote
 # 配置
 # ============================================================
 
-HOST = "localhost"
+HOST = "0.0.0.0"
 PORT = 8000
 
 BILIBILI_API = "https://api.bilibili.com"
@@ -513,6 +513,42 @@ def get_bilibili_user_videos(mid, after=0, page_size=50):
     获取 UP 主在某个时间点之后发布的视频。
 
     返回统一的数据结构列表。
+
+    带重试：B站风控会间歇性拒绝（412 / -352），
+    失败时稍等后重试一次。
+    """
+
+    last_error = None
+
+
+    for attempt in range(2):
+
+        try:
+
+            return _fetch_bilibili_user_videos_once(
+                mid,
+                after,
+                page_size
+            )
+
+        except RuntimeError as error:
+
+            last_error = error
+
+            print(
+                f"视频抓取第 {attempt + 1} 次失败：",
+                error
+            )
+
+            time.sleep(1)
+
+
+    raise last_error
+
+
+def _fetch_bilibili_user_videos_once(mid, after=0, page_size=50):
+    """
+    单次抓取，不做重试。
     """
 
     img_key, sub_key = get_wbi_keys()
