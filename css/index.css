@@ -47,3 +47,231 @@
 .queue-section {
     margin-top: var(--space-7);
 }
+
+
+.section-heading .button--small {
+    margin-left: auto;
+}
+
+
+.button--small {
+    min-height: 34px;
+
+    padding: 0 14px;
+
+    font-size: var(--font-size-small);
+}
+
+
+/* ==============================
+   Video list
+   ============================== */
+
+.video-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+
+.video-card {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 12px;
+
+    color: inherit;
+    background: var(--color-surface);
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-medium);
+
+    text-decoration: none;
+
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+.video-card:hover {
+    border-color: var(--color-primary);
+
+    box-shadow:
+        0 4px 16px
+        rgba(0, 0, 0, 0.06);
+}
+
+
+.video-card--expired {
+    opacity: 0.55;
+}
+
+
+.video-card__cover {
+    flex-shrink: 0;
+
+    width: 128px;
+    height: 72px;
+
+    display: block;
+
+    border-radius: var(--radius-small);
+
+    object-fit: cover;
+
+    background: #e9e9eb;
+}
+
+
+.video-card__body {
+    min-width: 0;
+    flex: 1;
+}
+
+
+.video-card__title {
+    display: -webkit-box;
+
+    overflow: hidden;
+
+    font-size: var(--font-size-normal);
+    font-weight: 600;
+    line-height: 1.4;
+
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+
+.video-card__meta {
+    margin-top: 4px;
+
+    color: var(--color-text-tertiary);
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+.video-card__countdown {
+    flex-shrink: 0;
+
+    text-align: right;
+}
+
+
+.video-card__countdown-label {
+    color: var(--color-text-tertiary);
+
+    font-size: 11px;
+}
+
+
+.video-card__countdown-text {
+    margin-top: 2px;
+
+    color: var(--color-text-secondary);
+
+    font-size: 14px;
+    font-weight: 600;
+
+    font-variant-numeric: tabular-nums;
+}
+
+
+/* ==============================
+   Cookie
+   ============================== */
+
+.cookie-section {
+    margin-top: var(--space-8);
+}
+
+
+.cookie-card {
+    padding: 16px;
+
+    background: var(--color-surface);
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-medium);
+}
+
+
+.cookie-card summary {
+    cursor: pointer;
+
+    font-size: var(--font-size-normal);
+    font-weight: 600;
+}
+
+
+.cookie-card__hint {
+    margin: 12px 0 0;
+
+    color: var(--color-text-secondary);
+
+    font-size: var(--font-size-small);
+    line-height: 1.6;
+}
+
+
+.cookie-form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+
+    margin-top: 12px;
+}
+
+
+.cookie-form__input {
+    width: 100%;
+    min-height: 44px;
+
+    padding: 0 12px;
+
+    color: var(--color-text);
+    background: var(--color-bg);
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-small);
+
+    outline: none;
+}
+
+
+.cookie-form__input:focus {
+    border-color: var(--color-primary);
+
+    box-shadow:
+        0 0 0 3px
+        rgba(22, 119, 255, 0.12);
+}
+
+
+.cookie-card__status {
+    margin: 12px 0 0;
+
+    color: var(--color-text-tertiary);
+
+    font-size: 12px;
+}
+
+
+@media (min-width: 700px) {
+
+    .cookie-form {
+        flex-direction: row;
+    }
+
+
+    .cookie-form__input {
+        flex: 1;
+    }
+}

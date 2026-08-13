@@ -10,12 +10,19 @@ export const CONFIG = {
 
     storage: {
         appStateKey: "bili_filter_app_state",
-        whitelistKey: "bili_filter_whitelist"
+        whitelistKey: "bili_filter_whitelist",
+        videoQueueKey: "bili_filter_video_queue",
+        videoLastFetchAtKey: "bili_filter_video_last_fetch_at"
     },
 
     whitelist: {
         modificationIntervalDays: 7,
         pendingPeriodHours: 24
+    },
+
+    video: {
+        expiryHours: 72,
+        pageSize: 50
     },
 
     budget: {

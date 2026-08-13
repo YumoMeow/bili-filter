@@ -67,25 +67,69 @@
 
                 <div class="section-heading">
                     <h2>可观看视频</h2>
+
+                    <button
+                        id="refresh-button"
+                        class="button button--small"
+                        type="button"
+                    >
+                        刷新
+                    </button>
                 </div>
 
-                <!-- Phase 0 空状态 -->
-                <div class="empty-state">
-                    <div class="empty-state__icon">
-                        ◇
-                    </div>
+                <div
+                    id="video-list"
+                    class="video-list"
+                ></div>
 
-                    <h2>还没有视频</h2>
+            </section>
 
-                    <p>
-                        白名单中的 UP 主有新视频后，
-                        它们会出现在这里。
+
+            <!-- Cookie 设置 -->
+            <section class="cookie-section">
+
+                <details class="cookie-card">
+
+                    <summary>
+                        B 站 Cookie 设置
+                    </summary>
+
+                    <p class="cookie-card__hint">
+                        如果视频抓取失败（风控拦截），
+                        请在浏览器登录 B 站后，
+                        复制 Cookie 中的 SESSDATA 粘贴到这里。
                     </p>
 
-                    <a href="settings.html" class="button button--primary">
-                        管理白名单
-                    </a>
-                </div>
+                    <form
+                        id="cookie-form"
+                        class="cookie-form"
+                    >
+
+                        <input
+                            id="cookie-input"
+                            class="cookie-form__input"
+                            type="text"
+                            autocomplete="off"
+                            placeholder="粘贴 SESSDATA"
+                        >
+
+                        <button
+                            class="button button--primary"
+                            type="submit"
+                        >
+                            保存 Cookie
+                        </button>
+
+                    </form>
+
+                    <p
+                        id="cookie-status"
+                        class="cookie-card__status"
+                    >
+                        正在读取 Cookie 状态……
+                    </p>
+
+                </details>
 
             </section>
 

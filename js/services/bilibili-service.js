@@ -216,6 +216,218 @@ class BilibiliService {
                 )
         };
     }
+
+
+    /**
+     * 获取 UP 主在某时间点之后发布的视频。
+     *
+     * @param {string|number} mid
+     * @param {Object} options
+     * @param {number} options.after   unix 秒，0 表示不限
+     * @param {number} options.pageSize
+     * @returns {Promise<Array>}
+     */
+    async getUserVideos(mid, options = {}) {
+
+        const cleanMid =
+            String(mid).trim();
+
+
+        if (!/^\d+$/.test(cleanMid)) {
+
+            throw new Error(
+                "UID 必须是纯数字。"
+            );
+        }
+
+
+        const after =
+            Number(options.after ?? 0);
+
+
+        const pageSize =
+            Number(options.pageSize ?? 50);
+
+
+        const query =
+            new URLSearchParams();
+
+
+        if (after > 0) {
+
+            query.set(
+                "after",
+                String(Math.floor(after))
+            );
+        }
+
+
+        query.set(
+            "ps",
+            String(pageSize)
+        );
+
+
+        const url =
+            `${this.baseUrl}/user/${encodeURIComponent(cleanMid)}/videos?${query.toString()}`;
+
+
+        let response;
+
+
+        try {
+
+            response =
+                await fetch(
+                    url,
+                    {
+                        method: "GET",
+
+                        headers: {
+                            "Accept":
+                                "application/json"
+                        }
+                    }
+                );
+
+        } catch (error) {
+
+            console.error(
+                "Bilibili videos request failed:",
+                error
+            );
+
+            throw new Error(
+                "无法连接本地服务器，请确认 server.py 正在运行。"
+            );
+        }
+
+
+        if (!response.ok) {
+
+            let errorMessage =
+                `服务器请求失败（HTTP ${response.status}）。`;
+
+
+            try {
+
+                const errorResult =
+                    await response.json();
+
+
+                if (
+                    errorResult
+                    && errorResult.error
+                ) {
+
+                    errorMessage =
+                        errorResult.error;
+                }
+
+            } catch (error) {
+
+                /*
+                 * 忽略非 JSON 错误响应。
+                 */
+            }
+
+
+            throw new Error(
+                errorMessage
+            );
+        }
+
+
+        let result;
+
+
+        try {
+
+            result =
+                await response.json();
+
+        } catch (error) {
+
+            throw new Error(
+                "服务器返回的数据格式异常。"
+            );
+        }
+
+
+        if (
+            !result
+            || result.success !== true
+        ) {
+
+            throw new Error(
+                result?.error
+                || "获取视频列表失败。"
+            );
+        }
+
+
+        const videos =
+            result.data;
+
+
+        if (!Array.isArray(videos)) {
+
+            throw new Error(
+                "服务器没有返回有效的视频列表。"
+            );
+        }
+
+
+        return videos.map(video => {
+
+            const bvid =
+                String(video.bvid ?? "");
+
+
+            return {
+
+                bvid,
+
+                title:
+                    video.title
+                    || "",
+
+                cover:
+                    video.cover
+                    || "",
+
+                author: {
+                    name:
+                        video.author?.name
+                        || "",
+
+                    mid:
+                        String(
+                            video.author?.mid
+                            ?? cleanMid
+                        )
+                },
+
+                publishedAt:
+                    video.publishedAt
+                    || null,
+
+                play:
+                    Number(
+                        video.play
+                        ?? 0
+                    ),
+
+                url:
+                    video.url
+                    || (
+                        bvid
+                            ? `https://www.bilibili.com/video/${bvid}`
+                            : ""
+                    )
+            };
+        });
+    }
 }
 
 

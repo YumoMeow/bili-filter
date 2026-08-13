@@ -1,0 +1,370 @@
+/**
+ * 视频队列业务服务
+ *
+ * Phase 3
+ *
+ * 负责：
+ * - 读取 / 保存视频队列
+ * - 记录上次抓取时间
+ * - 按白名单抓取新视频
+ * - 去重
+ * - 72 小时过期清理
+ *
+ * 预留后端化：
+ * - 存储通过 StorageAdapter 抽象，将来可替换成 ApiStorageAdapter
+ * - 抓取通过 BilibiliService，将来可替换成后端聚合接口
+ */
+
+
+import {
+    createEmptyVideoQueue,
+    createVideo,
+    isExpiredVideo,
+    isValidVideo
+} from "../models/video.js";
+
+
+import {
+    storage
+} from "./storage.js";
+
+
+import {
+    CONFIG
+} from "../config.js";
+
+
+import {
+    whitelistService
+} from "./whitelist-service.js";
+
+
+import {
+    bilibiliService
+} from "./bilibili-service.js";
+
+
+export class VideoService {
+
+    constructor(storageAdapter = storage) {
+
+        this.storage =
+            storageAdapter;
+
+        this.queueKey =
+            CONFIG.storage.videoQueueKey;
+
+        this.lastFetchAtKey =
+            CONFIG.storage.videoLastFetchAtKey;
+    }
+
+
+    /* ==================================================
+       基础数据
+       ================================================== */
+
+
+    /**
+     * 读取原始队列（不做过期处理）。
+     *
+     * @returns {Promise<Object>}
+     */
+    async loadQueue() {
+
+        let queue =
+            await this.storage.get(
+                this.queueKey
+            );
+
+
+        if (
+            !queue
+            || !Array.isArray(queue.videos)
+        ) {
+
+            queue =
+                createEmptyVideoQueue();
+        }
+
+
+        return queue;
+    }
+
+
+    /**
+     * 保存队列。
+     *
+     * @param {Object} queue
+     */
+    async saveQueue(queue) {
+
+        await this.storage.set(
+            this.queueKey,
+            {
+                version: 1,
+                videos: queue.videos
+            }
+        );
+    }
+
+
+    /**
+     * 获取未过期的视频，按发布时间倒序。
+     *
+     * @returns {Promise<Array>}
+     */
+    async getVideos() {
+
+        const queue =
+            await this.loadQueue();
+
+
+        const active =
+            queue.videos.filter(
+                video =>
+                    isValidVideo(video)
+                    && !isExpiredVideo(video)
+            );
+
+
+        if (
+            active.length
+            !== queue.videos.length
+        ) {
+
+            queue.videos = active;
+
+            await this.saveQueue(queue);
+        }
+
+
+        return active.sort(
+            (a, b) => {
+
+                const ta =
+                    new Date(
+                        a.publishedAt
+                        || a.addedAt
+                    ).getTime()
+                    || 0;
+
+
+                const tb =
+                    new Date(
+                        b.publishedAt
+                        || b.addedAt
+                    ).getTime()
+                    || 0;
+
+
+                return tb - ta;
+            }
+        );
+    }
+
+
+    /* ==================================================
+       上次抓取时间
+       ================================================== */
+
+
+    /**
+     * 读取上次抓取时间（ISO 字符串）。
+     *
+     * @returns {Promise<string|null>}
+     */
+    async getLastFetchAt() {
+
+        const value =
+            await this.storage.get(
+                this.lastFetchAtKey
+            );
+
+
+        return (
+            typeof value === "string"
+                ? value
+                : null
+        );
+    }
+
+
+    /**
+     * 写入上次抓取时间。
+     *
+     * @param {string} iso
+     */
+    async setLastFetchAt(iso) {
+
+        await this.storage.set(
+            this.lastFetchAtKey,
+            iso
+        );
+    }
+
+
+    /* ==================================================
+       抓取
+       ================================================== */
+
+
+    /**
+     * 按白名单抓取新视频，合并入队并清理过期项。
+     *
+     * 没有抓取记录时，默认抓取 72 小时前到现在的视频。
+     *
+     * @returns {Promise<Object>}
+     */
+    async refresh() {
+
+        const users =
+            await whitelistService
+                .getActiveUsers();
+
+
+        const now =
+            Date.now();
+
+
+        const lastFetchAt =
+            await this.getLastFetchAt();
+
+
+        const fallbackAfterMs =
+            now
+            - CONFIG.video.expiryHours
+            * 60
+            * 60
+            * 1000;
+
+
+        const afterMs =
+            lastFetchAt
+                ? new Date(lastFetchAt).getTime()
+                : fallbackAfterMs;
+
+
+        const afterSeconds =
+            Math.floor(
+                afterMs / 1000
+            );
+
+
+        const fetched = [];
+
+        const errors = [];
+
+
+        for (const user of users) {
+
+            try {
+
+                const list =
+                    await bilibiliService
+                        .getUserVideos(
+                            user.mid,
+                            {
+                                after:
+                                    afterSeconds,
+
+                                pageSize:
+                                    CONFIG.video.pageSize
+                            }
+                        );
+
+
+                for (const item of list) {
+
+                    fetched.push(
+                        createVideo(
+                            item,
+                            {
+                                expireHours:
+                                    CONFIG.video.expiryHours
+                            }
+                        )
+                    );
+                }
+
+            } catch (error) {
+
+                console.error(
+                    `抓取 UP 主「${user.name}」的视频失败：`,
+                    error
+                );
+
+
+                errors.push(
+                    {
+                        name: user.name,
+                        message: error.message
+                    }
+                );
+            }
+        }
+
+
+        /*
+         * 合并：已存在的视频保留原 addedAt / expireAt。
+         */
+        const queue =
+            await this.loadQueue();
+
+
+        const byBvid =
+            new Map();
+
+
+        for (const video of queue.videos) {
+
+            if (isValidVideo(video)) {
+
+                byBvid.set(
+                    video.bvid,
+                    video
+                );
+            }
+        }
+
+
+        for (const video of fetched) {
+
+            if (!byBvid.has(video.bvid)) {
+
+                byBvid.set(
+                    video.bvid,
+                    video
+                );
+            }
+        }
+
+
+        queue.videos =
+            [...byBvid.values()]
+                .filter(
+                    video =>
+                        !isExpiredVideo(video)
+                );
+
+
+        await this.saveQueue(queue);
+
+
+        await this.setLastFetchAt(
+            new Date().toISOString()
+        );
+
+
+        return {
+            fetched: fetched.length,
+            errors
+        };
+    }
+}
+
+
+/**
+ * 默认 Service。
+ */
+export const videoService =
+    new VideoService();
