@@ -419,6 +419,28 @@ export class VideoService {
             errors
         };
     }
+
+
+    /**
+     * 重置视频队列与抓取时间，
+     * 并立即按 72 小时窗口重新抓取。
+     *
+     * @returns {Promise<Object>}
+     */
+    async reset() {
+
+        await this.storage.remove(
+            this.queueKey
+        );
+
+
+        await this.storage.remove(
+            this.lastFetchAtKey
+        );
+
+
+        return await this.refresh();
+    }
 }
 
 

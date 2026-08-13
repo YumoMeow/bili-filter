@@ -44,6 +44,11 @@ import {
 } from "./ui/toast.js";
 
 
+import {
+    videoService
+} from "./services/video-service.js";
+
+
 /* ==================================================
    DOM
    ================================================== */
@@ -159,6 +164,12 @@ const userPreview =
     );
 
 
+const resetDefaultButton =
+    document.getElementById(
+        "reset-default-button"
+    );
+
+
 /* ==================================================
    State
    ================================================== */
@@ -237,7 +248,9 @@ function validateDOM() {
 
         midInput,
 
-        userPreview
+        userPreview,
+
+        resetDefaultButton
     };
 
 
@@ -1394,6 +1407,72 @@ async function saveEditing() {
 
 
 /* ==================================================
+   Reset
+   ================================================== */
+
+
+/**
+ * 重置为默认：
+ * 恢复默认白名单，并重新获取 72 小时内的视频。
+ */
+async function handleResetDefault() {
+
+    const confirmed =
+        window.confirm(
+            "确定要重置为默认吗？\n\n"
+            + "将清空白名单、视频队列和抓取记录，"
+            + "并恢复为默认白名单。"
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    try {
+
+        await whitelistService
+            .resetToDefault();
+
+
+        await videoService
+            .reset();
+
+
+        draftWhitelist =
+            null;
+
+
+        isEditing =
+            false;
+
+
+        await refresh();
+
+
+        showToast(
+            "已重置为默认，并已获取最近 72 小时的视频。"
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "重置失败：",
+            error
+        );
+
+
+        showToast(
+            error.message
+            || "重置失败。"
+        );
+    }
+}
+
+
+/* ==================================================
    Events
    ================================================== */
 
@@ -1431,6 +1510,15 @@ cancelEditButton.addEventListener(
 saveEditButton.addEventListener(
     "click",
     saveEditing
+);
+
+
+/*
+ * 重置为默认。
+ */
+resetDefaultButton.addEventListener(
+    "click",
+    handleResetDefault
 );
 
 

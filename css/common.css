@@ -283,6 +283,17 @@ a {
 }
 
 
+.button--danger {
+    color: #ffffff;
+    background: var(--color-danger);
+}
+
+
+.button--danger:hover {
+    background: #b3261e;
+}
+
+
 .button:disabled {
     opacity: 0.45;
 }

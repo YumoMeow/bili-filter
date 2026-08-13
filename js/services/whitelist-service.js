@@ -397,6 +397,27 @@ async clearDraft() {
 
 
 /**
+ * 重置为默认状态：
+ * 清空白名单与草稿，并重新从 default-whitelist.json
+ * 初始化（自动补齐 UP 主信息）。
+ *
+ * @returns {Promise<Object>}
+ */
+async resetToDefault() {
+
+    await this.storage.remove(
+        this.storageKey
+    );
+
+
+    await this.clearDraft();
+
+
+    return await this.load();
+}
+
+
+/**
  * 向 draft 中添加 UP 主。
  *
  * 注意：
