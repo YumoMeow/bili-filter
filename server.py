@@ -16,7 +16,7 @@ from urllib.parse import urlparse, parse_qs, quote
 # ============================================================
 
 HOST = "0.0.0.0"
-PORT = 8000
+PORT = int(os.environ.get("PORT", 8000))
 
 BILIBILI_API = "https://api.bilibili.com"
 
