@@ -462,24 +462,14 @@
 }
 
 /* ==================================================
-   Whitelist User Card
+   Whitelist item avatar
    ================================================== */
 
-.whitelist-user {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
+.whitelist-item__avatar {
+    flex-shrink: 0;
 
-
-.whitelist-user__avatar-wrapper {
-    flex: 0 0 auto;
-}
-
-
-.whitelist-user__avatar {
-    width: 52px;
-    height: 52px;
+    width: 48px;
+    height: 48px;
 
     display: block;
 
@@ -487,73 +477,70 @@
 
     object-fit: cover;
 
-    background: var(
-        --color-surface-secondary
-    );
+    background: #e9e9eb;
 }
 
 
-.whitelist-user__info {
+/* ==================================================
+   User preview
+   ================================================== */
+
+.user-preview {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 12px;
+
+    background: #fafafa;
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-medium);
+}
+
+
+.user-preview[hidden] {
+    display: none;
+}
+
+
+.user-preview__avatar {
+    flex-shrink: 0;
+
+    width: 44px;
+    height: 44px;
+
+    display: block;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    background: #e9e9eb;
+}
+
+
+.user-preview__info {
     min-width: 0;
     flex: 1;
 }
 
 
-.whitelist-user__name {
-    font-size: 16px;
+.user-preview__name {
+    overflow: hidden;
+
+    font-size: var(--font-size-normal);
     font-weight: 600;
 
-    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 
-.whitelist-user__meta {
-    display: flex;
+.user-preview__meta {
+    margin-top: 2px;
 
-    gap: 10px;
+    color: var(--color-text-tertiary);
 
-    margin-top: 4px;
-
-    font-size: 13px;
-
-    color: var(
-        --color-text-secondary
-    );
-
-    flex-wrap: wrap;
-}
-
-
-.whitelist-user__remove {
-    flex: 0 0 auto;
-}
-
-
-/* 手机 */
-@media (max-width: 600px) {
-
-    .whitelist-user {
-        gap: 10px;
-    }
-
-
-    .whitelist-user__avatar {
-        width: 44px;
-        height: 44px;
-    }
-
-
-    .whitelist-user__name {
-        font-size: 15px;
-    }
-
-
-    .whitelist-user__meta {
-        font-size: 12px;
-
-        gap: 6px;
-    }
-
+    font-size: var(--font-size-small);
 }

@@ -34,7 +34,8 @@ import {
 
 
 import {
-    renderWhitelist
+    renderWhitelist,
+    formatFans
 } from "./ui/whitelist-view.js";
 
 
@@ -181,6 +182,12 @@ let draftWhitelist = null;
  * 防止多个 refresh() 同时运行。
  */
 let isRefreshing = false;
+
+
+/*
+ * UID 输入预览的防抖计时器。
+ */
+let previewTimer = null;
 
 
 /* ==================================================
@@ -476,6 +483,107 @@ function closeAddModal() {
         "aria-hidden",
         "true"
     );
+}
+
+
+/* ==================================================
+   User Preview
+   ================================================== */
+
+
+/**
+ * 在添加弹窗中渲染 UP 主预览。
+ *
+ * @param {Object} user
+ */
+function renderUserPreview(user) {
+
+    if (!userPreview) {
+        return;
+    }
+
+
+    userPreview.innerHTML = "";
+
+    userPreview.hidden = false;
+
+
+    const avatar =
+        document.createElement("img");
+
+    avatar.className =
+        "user-preview__avatar";
+
+    avatar.src =
+        user.avatar
+        || "assets/default-avatar.svg";
+
+    avatar.alt =
+        `${user.name} 的头像`;
+    
+    avatar.referrerPolicy = 
+        "no-referrer";
+
+
+    const info =
+        document.createElement("div");
+
+    info.className =
+        "user-preview__info";
+
+
+    const name =
+        document.createElement("div");
+
+    name.className =
+        "user-preview__name";
+
+    name.textContent =
+        user.name;
+
+
+    const meta =
+        document.createElement("div");
+
+    meta.className =
+        "user-preview__meta";
+
+    meta.textContent =
+        `UID ${user.mid} · ${formatFans(user.fans)} 粉丝`;
+
+
+    info.appendChild(
+        name
+    );
+
+    info.appendChild(
+        meta
+    );
+
+
+    userPreview.appendChild(
+        avatar
+    );
+
+    userPreview.appendChild(
+        info
+    );
+}
+
+
+/**
+ * 清空并隐藏预览。
+ */
+function clearUserPreview() {
+
+    if (!userPreview) {
+        return;
+    }
+
+
+    userPreview.innerHTML = "";
+
+    userPreview.hidden = true;
 }
 
 
@@ -1347,6 +1455,55 @@ modalCancel.addEventListener(
 addForm.addEventListener(
     "submit",
     handleAdd
+);
+
+
+/*
+ * 输入 UID 时，防抖查询并显示 UP 主预览。
+ */
+midInput.addEventListener(
+    "input",
+    () => {
+
+        clearTimeout(
+            previewTimer
+        );
+
+
+        const mid =
+            midInput.value.trim();
+
+
+        if (!/^\d+$/.test(mid)) {
+
+            clearUserPreview();
+
+            return;
+        }
+
+
+        previewTimer = setTimeout(
+            async () => {
+
+                try {
+
+                    const userInfo =
+                        await bilibiliService
+                            .getUserInfo(mid);
+
+
+                    renderUserPreview(
+                        userInfo
+                    );
+
+                } catch (error) {
+
+                    clearUserPreview();
+                }
+            },
+            500
+        );
+    }
 );
 
 

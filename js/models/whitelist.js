@@ -37,6 +37,16 @@ export function createWhitelistUser(
         mid: String(mid),
         name: String(name),
 
+        avatar:
+            options.avatar
+            || "",
+
+        fans:
+            Number(
+                options.fans
+                ?? 0
+            ),
+
         status:
             options.status
             ?? USER_STATUS.PENDING,

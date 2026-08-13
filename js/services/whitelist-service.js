@@ -402,10 +402,8 @@ addUserToDraft(
     const user =
         createWhitelistUser(
             mid,
+            userInfo.name,
             {
-                name:
-                    userInfo.name,
-
                 avatar:
                     userInfo.avatar,
 

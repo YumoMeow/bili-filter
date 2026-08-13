@@ -216,10 +216,8 @@ def get_bilibili_user(mid):
 
         "fans":
             int(
-                data.get(
-                    "follower",
-                    0
-                )
+                card.get("fans")
+                or data.get("follower")
                 or 0
             )
     }

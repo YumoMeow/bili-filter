@@ -140,6 +140,8 @@ export function renderWhitelist(
         avatar.loading =
             "lazy";
 
+        avatar.referrerPolicy = 
+            "no-referrer";
 
         /* ==========================
         用户信息
@@ -184,10 +186,6 @@ export function renderWhitelist(
         /* ==========================
         组合
         ========================== */
-
-        content.appendChild(
-            avatar
-        );
 
         content.appendChild(
             info
@@ -281,6 +279,10 @@ export function renderWhitelist(
            ========================== */
 
         item.appendChild(
+            avatar
+        );
+
+        item.appendChild(
             content
         );
 
@@ -299,7 +301,7 @@ export function renderWhitelist(
     }
 }
 
-function formatFans(fans) {
+export function formatFans(fans) {
 
     const value =
         Number(fans);
