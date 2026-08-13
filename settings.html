@@ -309,50 +309,36 @@
             >
 
 
-                <div class="form-field">
+            <div class="form-group">
 
-                    <label for="user-mid">
-                        UID
-                    </label>
+                <label
+                    for="whitelist-mid"
+                    class="form-label"
+                >
+                    B站 UID
+                </label>
 
-                    <input
-                        id="user-mid"
-                        name="mid"
-                        type="text"
-                        inputmode="numeric"
-                        autocomplete="off"
-                        placeholder="例如 123456"
-                        required
-                    >
+                <input
+                    id="whitelist-mid"
+                    class="form-input"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    placeholder="请输入 UP 主 UID"
+                >
 
-                    <div class="form-field__hint">
-                        当前阶段直接填写 B 站 UID。
-                    </div>
+                <p class="form-help">
+                    只需要输入 UID，系统会自动获取 UP 主信息。
+                </p>
 
-                </div>
+            </div>
 
-
-                <div class="form-field">
-
-                    <label for="user-name">
-                        UP 主名称
-                    </label>
-
-                    <input
-                        id="user-name"
-                        name="name"
-                        type="text"
-                        autocomplete="off"
-                        placeholder="例如 某某足球"
-                        maxlength="50"
-                        required
-                    >
-
-                    <div class="form-field__hint">
-                        名称用于本地显示，后续接入 B 站 API 后可以自动获取。
-                    </div>
-
-                </div>
+            <div
+                id="user-preview"
+                class="user-preview"
+                hidden
+            >
+            </div>
 
 
                 <div class="modal__actions">

@@ -110,14 +110,46 @@ export function renderWhitelist(
 
 
         /* ==========================
-           左侧内容
-           ========================== */
+        左侧内容
+        ========================== */
 
         const content =
             document.createElement("div");
 
         content.className =
             "whitelist-item__content";
+
+
+        /* ==========================
+        头像
+        ========================== */
+
+        const avatar =
+            document.createElement("img");
+
+        avatar.className =
+            "whitelist-item__avatar";
+
+        avatar.src =
+            user.avatar
+            || "assets/default-avatar.svg";
+
+        avatar.alt =
+            `${user.name} 的头像`;
+
+        avatar.loading =
+            "lazy";
+
+
+        /* ==========================
+        用户信息
+        ========================== */
+
+        const info =
+            document.createElement("div");
+
+        info.className =
+            "whitelist-item__info";
 
 
         const name =
@@ -137,15 +169,28 @@ export function renderWhitelist(
             "whitelist-item__meta";
 
         meta.textContent =
-            `UID ${user.mid}`;
+            `UID ${user.mid} · ${formatFans(user.fans)} 粉丝`;
 
 
-        content.appendChild(
+        info.appendChild(
             name
         );
 
-        content.appendChild(
+        info.appendChild(
             meta
+        );
+
+
+        /* ==========================
+        组合
+        ========================== */
+
+        content.appendChild(
+            avatar
+        );
+
+        content.appendChild(
+            info
         );
 
 
@@ -252,4 +297,29 @@ export function renderWhitelist(
             item
         );
     }
+}
+
+function formatFans(fans) {
+
+    const value =
+        Number(fans);
+
+
+    if (!Number.isFinite(value)) {
+        return "0";
+    }
+
+
+    if (value >= 10000) {
+
+        return (
+            (value / 10000)
+                .toFixed(1)
+                .replace(/\.0$/, "")
+            + "万"
+        );
+    }
+
+
+    return value.toLocaleString("zh-CN");
 }

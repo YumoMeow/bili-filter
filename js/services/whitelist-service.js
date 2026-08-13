@@ -336,43 +336,44 @@ async clearDraft() {
 /**
  * 向 draft 中添加 UP 主。
  *
+ * 注意：
+ * 这个函数只负责修改 draft。
+ *
+ * 不负责：
+ * - 查询 B站
+ * - 保存正式白名单
+ * - 启动 7 天周期
+ *
  * @param {Object} draft
- * @param {string|number} mid
- * @param {string} name
+ * @param {Object} userInfo
  */
 addUserToDraft(
     draft,
-    mid,
-    name
+    userInfo
 ) {
 
-    const cleanMid =
-        String(mid).trim();
-
-    const cleanName =
-        String(name).trim();
-
-
-    if (!cleanMid) {
+    if (
+        !userInfo
+        || !userInfo.mid
+    ) {
 
         throw new Error(
-            "UP 主 UID 不能为空。"
+            "UP 主信息无效。"
         );
     }
 
 
-    if (!cleanName) {
-
-        throw new Error(
-            "UP 主名称不能为空。"
-        );
-    }
+    const mid =
+        String(
+            userInfo.mid
+        ).trim();
 
 
     const exists =
         draft.users.some(
             user =>
-                user.mid === cleanMid
+                String(user.mid)
+                === mid
         );
 
 
@@ -400,9 +401,17 @@ addUserToDraft(
 
     const user =
         createWhitelistUser(
-            cleanMid,
-            cleanName,
+            mid,
             {
+                name:
+                    userInfo.name,
+
+                avatar:
+                    userInfo.avatar,
+
+                fans:
+                    userInfo.fans,
+
                 status:
                     USER_STATUS.PENDING,
 

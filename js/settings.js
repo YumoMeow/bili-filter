@@ -1,27 +1,36 @@
 /**
  * 白名单设置页面
  *
- * 注意：
- *
- * 这里负责：
- *
+ * 负责：
  * - 读取 UI
  * - 调用 WhitelistService
- * - 更新 UI
+ * - 调用 BilibiliService
+ * - 管理编辑状态
+ * - 管理 draft_whitelist
+ * - 更新页面
  *
  * 不负责：
+ * - 白名单数据结构
+ * - 7 天修改规则
+ * - 24 小时冷静期规则
+ * - 正式数据存储
  *
- * - 7 天限制
- * - 24 小时限制
- * - 数据保存
- *
- * 这些全部由 WhitelistService 负责。
+ * 这些由 Service 负责。
  */
 
+
+/* ==================================================
+   Imports
+   ================================================== */
 
 import {
     whitelistService
 } from "./services/whitelist-service.js";
+
+
+import {
+    bilibiliService
+} from "./services/bilibili-service.js";
 
 
 import {
@@ -38,7 +47,6 @@ import {
    DOM
    ================================================== */
 
-
 const listElement =
     document.getElementById(
         "whitelist-list"
@@ -50,11 +58,6 @@ const countElement =
         "whitelist-count"
     );
 
-
-const addButton =
-    document.getElementById(
-        "add-whitelist-button"
-    );
 
 const editButton =
     document.getElementById(
@@ -68,6 +71,12 @@ const draftActions =
     );
 
 
+const addButton =
+    document.getElementById(
+        "add-whitelist-button"
+    );
+
+
 const cancelEditButton =
     document.getElementById(
         "cancel-edit-button"
@@ -78,6 +87,7 @@ const saveEditButton =
     document.getElementById(
         "save-edit-button"
     );
+
 
 const modificationCard =
     document.getElementById(
@@ -127,20 +137,137 @@ const addForm =
     );
 
 
+/*
+ * 注意：
+ *
+ * settings.html 中的 ID 是：
+ *
+ * whitelist-mid
+ *
+ * 不是 user-mid。
+ */
 const midInput =
     document.getElementById(
-        "user-mid"
+        "whitelist-mid"
     );
 
 
-const nameInput =
+const userPreview =
     document.getElementById(
-        "user-name"
+        "user-preview"
     );
 
-let isEditing = false
 
-let draftWhitelist = null
+/* ==================================================
+   State
+   ================================================== */
+
+
+/*
+ * 是否正在编辑。
+ */
+let isEditing = false;
+
+
+/*
+ * 当前编辑中的草稿。
+ *
+ * 正式数据不会因为这里的修改而改变。
+ */
+let draftWhitelist = null;
+
+
+/*
+ * 防止多个 refresh() 同时运行。
+ */
+let isRefreshing = false;
+
+
+/* ==================================================
+   DOM 检查
+   ================================================== */
+
+
+/**
+ * 检查页面需要的 DOM 是否存在。
+ *
+ * 如果 HTML 和 JS 的 ID 不一致，
+ * 这里会直接在 Console 中指出问题。
+ */
+function validateDOM() {
+
+    const requiredElements = {
+
+        listElement,
+
+        countElement,
+
+        editButton,
+
+        draftActions,
+
+        addButton,
+
+        cancelEditButton,
+
+        saveEditButton,
+
+        modificationCard,
+
+        modificationTitle,
+
+        modificationDescription,
+
+        modificationTime,
+
+        modal,
+
+        modalClose,
+
+        modalCancel,
+
+        addForm,
+
+        midInput,
+
+        userPreview
+    };
+
+
+    const missing = [];
+
+
+    for (
+        const [name, element]
+        of Object.entries(
+            requiredElements
+        )
+    ) {
+
+        if (!element) {
+
+            missing.push(
+                name
+            );
+        }
+    }
+
+
+    if (missing.length > 0) {
+
+        console.error(
+            "settings.js: 缺少 DOM 元素：",
+            missing
+        );
+
+        return false;
+    }
+
+
+    return true;
+}
+
+
 /* ==================================================
    Utility
    ================================================== */
@@ -159,9 +286,21 @@ function formatDateTime(iso) {
     }
 
 
-    return new Date(
-        iso
-    ).toLocaleString(
+    const date =
+        new Date(iso);
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return "";
+    }
+
+
+    return date.toLocaleString(
         "zh-CN",
         {
             year: "numeric",
@@ -183,6 +322,17 @@ function formatDateTime(iso) {
 function formatRemaining(
     milliseconds
 ) {
+
+    if (
+        !Number.isFinite(
+            milliseconds
+        )
+        || milliseconds <= 0
+    ) {
+
+        return "即将解锁";
+    }
+
 
     const totalMinutes =
         Math.ceil(
@@ -244,7 +394,9 @@ function formatRemaining(
     }
 
 
-    return parts.join(" ");
+    return parts.join(
+        " "
+    );
 }
 
 
@@ -254,9 +406,39 @@ function formatRemaining(
 
 
 /**
- * 打开添加窗口。
+ * 打开添加 UP 主窗口。
  */
 function openAddModal() {
+
+    if (!isEditing) {
+
+        showToast(
+            "请先进入编辑模式。"
+        );
+
+        return;
+    }
+
+
+    midInput.value = "";
+
+
+    /*
+     * Phase 2 已经不再手动填写名称。
+     *
+     * 因此不再出现：
+     *
+     * nameInput.value = "";
+     */
+
+
+    if (userPreview) {
+
+        userPreview.innerHTML = "";
+
+        userPreview.hidden = true;
+    }
+
 
     modal.classList.add(
         "modal-backdrop--visible"
@@ -269,15 +451,14 @@ function openAddModal() {
     );
 
 
-    midInput.value = "";
-    nameInput.value = "";
+    setTimeout(
+        () => {
 
+            midInput.focus();
 
-    setTimeout(() => {
-
-        midInput.focus();
-
-    }, 100);
+        },
+        100
+    );
 }
 
 
@@ -304,24 +485,21 @@ function closeAddModal() {
 
 
 /**
- * 更新修改状态。
+ * 更新白名单修改状态。
  */
 async function updateModificationUI() {
 
-    const status =
-        await whitelistService
-            .getModificationStatus();
-
     /*
-     * 编辑过程中仍然允许修改 draft。
+     * 编辑状态：
      *
-     * 7 天限制只在最终保存时生效。
+     * 7 天限制暂时不影响 draft。
      */
     if (isEditing) {
 
         modificationCard.classList.add(
             "modification-card--available"
         );
+
 
         modificationCard.classList.remove(
             "modification-card--locked"
@@ -343,11 +521,23 @@ async function updateModificationUI() {
         return;
     }
 
+
+    /*
+     * 非编辑状态：
+     *
+     * 正常读取正式白名单的修改状态。
+     */
+    const status =
+        await whitelistService
+            .getModificationStatus();
+
+
     if (status.canModify) {
 
         modificationCard.classList.add(
             "modification-card--available"
         );
+
 
         modificationCard.classList.remove(
             "modification-card--locked"
@@ -359,22 +549,18 @@ async function updateModificationUI() {
 
 
         modificationDescription.textContent =
-            "添加或删除 UP 主后，将进入 7 天修改锁定期。";
+            "点击“编辑白名单”后，可以添加或删除 UP 主。";
 
 
         modificationTime.textContent =
             "";
-
-
-        addButton.disabled =
-            false;
-
 
     } else {
 
         modificationCard.classList.remove(
             "modification-card--available"
         );
+
 
         modificationCard.classList.add(
             "modification-card--locked"
@@ -389,14 +575,44 @@ async function updateModificationUI() {
             "为了减少冲动修改，当前暂时不能调整白名单。";
 
 
+        let timeText = "";
+
+
+        if (
+            status.nextModifyAt
+        ) {
+
+            const nextModify =
+                new Date(
+                    status.nextModifyAt
+                );
+
+
+            const remaining =
+                nextModify.getTime()
+                - Date.now();
+
+
+            timeText =
+                `下一次可修改：${formatDateTime(
+                    status.nextModifyAt
+                )}`;
+
+
+            if (
+                remaining > 0
+            ) {
+
+                timeText +=
+                    `（还需 ${formatRemaining(
+                        remaining
+                    )}）`;
+            }
+        }
+
+
         modificationTime.textContent =
-            `下一次可修改：${formatDateTime(
-                status.nextModifyAt
-            )}`;
-
-
-        addButton.disabled =
-            true;
+            timeText;
     }
 }
 
@@ -407,34 +623,78 @@ async function updateModificationUI() {
 
 
 /**
- * 刷新整个页面。
+ * 刷新页面。
  */
 async function refresh() {
 
+    /*
+     * 防止自动刷新和手动刷新同时执行。
+     */
+    if (isRefreshing) {
+        return;
+    }
+
+
+    isRefreshing = true;
+
+
     try {
 
-        const users =
-            isEditing
-                ? draftWhitelist.users
-                : await whitelistService.getUsers();
+        let users;
 
 
-        const status =
-            await whitelistService
-                .getModificationStatus();
+        /*
+         * 编辑状态：
+         *
+         * 显示 draft。
+         */
+        if (isEditing) {
+
+            if (!draftWhitelist) {
+
+                throw new Error(
+                    "当前处于编辑状态，但 draft_whitelist 不存在。"
+                );
+            }
 
 
+            users =
+                Array.isArray(
+                    draftWhitelist.users
+                )
+                    ? draftWhitelist.users
+                    : [];
+
+
+        } else {
+
+            /*
+             * 正常状态：
+             *
+             * 显示正式白名单。
+             */
+            users =
+                await whitelistService
+                    .getUsers();
+        }
+
+
+        /*
+         * 更新数量。
+         */
         countElement.textContent =
-            users.length;
+            String(
+                users.length
+            );
 
 
+        /*
+         * 渲染 UP 主卡片。
+         */
         renderWhitelist(
             listElement,
             users,
             {
-                /*
-                 * 编辑状态下允许删除。
-                 */
                 canModify:
                     isEditing,
 
@@ -444,22 +704,34 @@ async function refresh() {
         );
 
 
+        /*
+         * 更新修改状态。
+         */
         await updateModificationUI();
 
 
         /*
-         * 编辑状态下不显示正式修改锁定按钮。
+         * 编辑按钮：
+         *
+         * 编辑时隐藏。
          */
         editButton.hidden =
             isEditing;
 
 
+        /*
+         * 编辑操作按钮：
+         *
+         * 非编辑时隐藏。
+         */
         draftActions.hidden =
             !isEditing;
 
 
         /*
-         * 没有变化时不能保存。
+         * 保存按钮。
+         *
+         * 只有真的发生修改时才能保存。
          */
         if (isEditing) {
 
@@ -469,6 +741,7 @@ async function refresh() {
                         draftWhitelist
                     );
 
+
             saveEditButton.disabled =
                 !changed;
         }
@@ -477,11 +750,115 @@ async function refresh() {
     } catch (error) {
 
         console.error(
+            "刷新白名单页面失败：",
             error
         );
 
+
+        /*
+         * 不再默默卡在：
+         *
+         * “正在检查白名单状态……”
+         *
+         * 而是直接告诉用户出了什么问题。
+         */
+        modificationTitle.textContent =
+            "白名单状态读取失败";
+
+
+        modificationDescription.textContent =
+            error.message
+            || "读取白名单时发生未知错误。";
+
+
+        modificationTime.textContent =
+            "请打开浏览器控制台查看详细错误。";
+
+
         showToast(
-            "读取白名单失败。"
+            error.message
+            || "读取白名单失败。"
+        );
+
+
+    } finally {
+
+        isRefreshing = false;
+    }
+}
+
+
+/* ==================================================
+   Begin Editing
+   ================================================== */
+
+
+/**
+ * 开始编辑白名单。
+ */
+async function beginEditing() {
+
+    try {
+
+        /*
+         * 先检查 7 天锁定。
+         */
+        const canModify =
+            await whitelistService
+                .canModify();
+
+
+        if (!canModify) {
+
+            showToast(
+                "当前还不能修改白名单。"
+            );
+
+
+            await refresh();
+
+            return;
+        }
+
+
+        /*
+         * 创建 draft_whitelist。
+         */
+        draftWhitelist =
+            await whitelistService
+                .beginEdit();
+
+
+        if (
+            !draftWhitelist
+            || !Array.isArray(
+                draftWhitelist.users
+            )
+        ) {
+
+            throw new Error(
+                "创建白名单草稿失败。"
+            );
+        }
+
+
+        isEditing = true;
+
+
+        await refresh();
+
+
+    } catch (error) {
+
+        console.error(
+            "进入编辑模式失败：",
+            error
+        );
+
+
+        showToast(
+            error.message
+            || "无法进入编辑模式。"
         );
     }
 }
@@ -493,9 +870,17 @@ async function refresh() {
 
 
 /**
- * 处理添加。
+ * 添加 UP 主。
  *
- * @param {SubmitEvent} event
+ * 流程：
+ *
+ * UID
+ * ↓
+ * BilibiliService
+ * ↓
+ * 获取昵称 / 头像 / 粉丝数
+ * ↓
+ * draft_whitelist
  */
 async function handleAdd(
     event
@@ -508,21 +893,30 @@ async function handleAdd(
         midInput.value.trim();
 
 
-    const name =
-        nameInput.value.trim();
-
-
-    if (!mid || !name) {
+    if (!mid) {
 
         showToast(
-            "请完整填写 UID 和 UP 主名称。"
+            "请输入 B 站 UID。"
         );
 
         return;
     }
 
 
-    if (!isEditing || !draftWhitelist) {
+    if (!/^\d+$/.test(mid)) {
+
+        showToast(
+            "UID 必须是纯数字。"
+        );
+
+        return;
+    }
+
+
+    if (
+        !isEditing
+        || !draftWhitelist
+    ) {
 
         showToast(
             "当前不处于编辑状态。"
@@ -532,48 +926,101 @@ async function handleAdd(
     }
 
 
+    /*
+     * 禁止重复点击。
+     */
+    const submitButton =
+        addForm.querySelector(
+            'button[type="submit"]'
+        );
+
+
+    if (submitButton) {
+
+        submitButton.disabled =
+            true;
+
+        submitButton.textContent =
+            "查询中……";
+    }
+
+
     try {
 
+        /*
+         * ① 根据 UID 获取 B站用户信息。
+         */
+        const userInfo =
+            await bilibiliService
+                .getUserInfo(mid);
+
+
+        /*
+         * ② 把完整用户信息加入 draft。
+         */
         whitelistService.addUserToDraft(
             draftWhitelist,
-            mid,
-            name
+            userInfo
         );
 
 
         /*
-         * 保存 draft。
+         * ③ 保存 draft。
          *
-         * 这里只保存临时数据，
-         * 不启动 7 天周期。
+         * 注意：
+         *
+         * 这里不会启动 7 天周期。
          */
         await whitelistService.saveDraft(
             draftWhitelist
         );
 
 
+        /*
+         * ④ 关闭 Modal。
+         */
         closeAddModal();
 
 
+        midInput.value =
+            "";
+
+
+        /*
+         * ⑤ 刷新页面。
+         */
         await refresh();
 
 
         showToast(
-            `${name} 已加入本次修改。`
+            `已添加「${userInfo.name}」，点击“保存修改”后正式提交。`
         );
 
 
     } catch (error) {
 
         console.error(
+            "添加 UP 主失败：",
             error
         );
 
 
         showToast(
             error.message
-            || "添加失败。"
+            || "添加 UP 主失败。"
         );
+
+
+    } finally {
+
+        if (submitButton) {
+
+            submitButton.disabled =
+                false;
+
+            submitButton.textContent =
+                "添加";
+        }
     }
 }
 
@@ -584,7 +1031,7 @@ async function handleAdd(
 
 
 /**
- * 删除 UP 主。
+ * 从 draft 删除 UP 主。
  *
  * @param {Object} user
  */
@@ -636,6 +1083,7 @@ async function handleRemove(
     } catch (error) {
 
         console.error(
+            "删除 UP 主失败：",
             error
         );
 
@@ -647,77 +1095,93 @@ async function handleRemove(
     }
 }
 
-async function beginEditing() {
 
-    const canModify =
-        await whitelistService
-            .canModify();
+/* ==================================================
+   Cancel Editing
+   ================================================== */
 
 
-    if (!canModify) {
+/**
+ * 取消编辑。
+ */
+async function cancelEditing() {
 
-        showToast(
-            "当前还不能修改白名单。"
-        );
-
-        await refresh();
-
+    if (!isEditing) {
         return;
     }
 
 
-    draftWhitelist =
-        await whitelistService
-            .beginEdit();
+    try {
+
+        const changed =
+            draftWhitelist
+                ? await whitelistService
+                    .hasDraftChanges(
+                        draftWhitelist
+                    )
+                : false;
 
 
-    isEditing = true;
+        if (changed) {
+
+            const confirmed =
+                window.confirm(
+                    "本次编辑尚未保存，确定要取消吗？"
+                );
 
 
-    await refresh();
-}
-
-async function cancelEditing() {
-
-    const changed =
-        draftWhitelist
-            ? await whitelistService
-                .hasDraftChanges(
-                    draftWhitelist
-                )
-            : false;
-
-
-    if (changed) {
-
-        const confirmed =
-            window.confirm(
-                "本次编辑尚未保存，确定要取消吗？"
-            );
-
-
-        if (!confirmed) {
-            return;
+            if (!confirmed) {
+                return;
+            }
         }
+
+
+        await whitelistService
+            .clearDraft();
+
+
+        draftWhitelist =
+            null;
+
+
+        isEditing =
+            false;
+
+
+        await refresh();
+
+
+        showToast(
+            "已取消本次修改。"
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "取消编辑失败：",
+            error
+        );
+
+
+        showToast(
+            error.message
+            || "取消修改失败。"
+        );
     }
-
-
-    await whitelistService.clearDraft();
-
-
-    draftWhitelist = null;
-
-    isEditing = false;
-
-
-    await refresh();
-
-
-    showToast(
-        "已取消本次修改。"
-    );
 }
 
+
+/* ==================================================
+   Save Editing
+   ================================================== */
+
+
+/**
+ * 正式保存 draft。
+ *
+ * 只有这里才启动 7 天修改周期。
+ */
 async function saveEditing() {
 
     if (
@@ -729,44 +1193,66 @@ async function saveEditing() {
     }
 
 
-    const changed =
+    try {
+
+        /*
+         * 检查是否真的发生变化。
+         */
+        const changed =
+            await whitelistService
+                .hasDraftChanges(
+                    draftWhitelist
+                );
+
+
+        if (!changed) {
+
+            showToast(
+                "白名单没有发生任何变化。"
+            );
+
+            return;
+        }
+
+
+        /*
+         * 最终确认。
+         */
+        const confirmed =
+            window.confirm(
+                "确定保存本次白名单修改吗？\n\n保存后 7 天内无法再次修改白名单。"
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        saveEditButton.disabled =
+            true;
+
+
+        /*
+         * 正式提交。
+         *
+         * 7 天周期在这里启动。
+         */
         await whitelistService
-            .hasDraftChanges(
+            .commitDraft(
                 draftWhitelist
             );
 
 
-    if (!changed) {
-
-        showToast(
-            "白名单没有发生任何变化。"
-        );
-
-        return;
-    }
+        /*
+         * 清理编辑状态。
+         */
+        draftWhitelist =
+            null;
 
 
-    const confirmed =
-        window.confirm(
-            "确定保存本次白名单修改吗？\n\n保存后 7 天内无法再次修改白名单。"
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    try {
-
-        await whitelistService.commitDraft(
-            draftWhitelist
-        );
-
-
-        draftWhitelist = null;
-
-        isEditing = false;
+        isEditing =
+            false;
 
 
         await refresh();
@@ -780,46 +1266,69 @@ async function saveEditing() {
     } catch (error) {
 
         console.error(
+            "保存白名单失败：",
             error
         );
 
 
         showToast(
             error.message
-            || "保存失败。"
+            || "保存白名单失败。"
         );
+
+
+    } finally {
+
+        saveEditButton.disabled =
+            false;
     }
 }
+
 
 /* ==================================================
    Events
    ================================================== */
 
 
+/*
+ * 编辑白名单。
+ */
 editButton.addEventListener(
     "click",
     beginEditing
 );
 
 
+/*
+ * 添加 UP 主。
+ */
 addButton.addEventListener(
     "click",
     openAddModal
 );
 
 
+/*
+ * 取消编辑。
+ */
 cancelEditButton.addEventListener(
     "click",
     cancelEditing
 );
 
 
+/*
+ * 保存修改。
+ */
 saveEditButton.addEventListener(
     "click",
     saveEditing
 );
 
 
+/*
+ * 关闭 Modal。
+ */
 modalClose.addEventListener(
     "click",
     closeAddModal
@@ -832,6 +1341,9 @@ modalCancel.addEventListener(
 );
 
 
+/*
+ * 提交添加表单。
+ */
 addForm.addEventListener(
     "submit",
     handleAdd
@@ -856,7 +1368,7 @@ modal.addEventListener(
 
 
 /*
- * ESC 关闭。
+ * ESC 关闭 Modal。
  */
 document.addEventListener(
     "keydown",
@@ -879,13 +1391,13 @@ document.addEventListener(
 
 /*
  * 每分钟刷新一次。
- *
- * 这样如果用户一直开着页面，
- * 24 小时冷静期结束后，
- * UI 可以自动更新。
  */
 setInterval(
-    refresh,
+    () => {
+
+        refresh();
+
+    },
     60 * 1000
 );
 
@@ -895,4 +1407,30 @@ setInterval(
    ================================================== */
 
 
-refresh();
+async function init() {
+
+    /*
+     * 首先确认 HTML 与 JS 对得上。
+     */
+    if (!validateDOM()) {
+
+        modificationTitle.textContent =
+            "页面初始化失败";
+
+
+        modificationDescription.textContent =
+            "HTML 中缺少必要的页面元素，请打开控制台查看具体错误。";
+
+
+        return;
+    }
+
+
+    /*
+     * 正式开始读取白名单。
+     */
+    await refresh();
+}
+
+
+init();
