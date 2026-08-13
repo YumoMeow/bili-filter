@@ -23,7 +23,8 @@ export const CONFIG = {
 
     video: {
         expiryHours: 72,
-        pageSize: 50
+        pageSize: 50,
+        refetchIntervalHours: 24
     },
 
     budget: {

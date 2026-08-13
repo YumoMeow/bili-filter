@@ -261,6 +261,42 @@ export class VideoService {
             await this.getLastFetchAt();
 
 
+        /*
+         * 距离上次成功抓取不足 24 小时时，
+         * 跳过本次抓取，直接使用现有队列。
+         */
+        if (lastFetchAt) {
+
+            const lastFetchMs =
+                new Date(lastFetchAt).getTime();
+
+
+            const intervalMs =
+                CONFIG.video.refetchIntervalHours
+                * 60
+                * 60
+                * 1000;
+
+
+            if (
+                Number.isFinite(lastFetchMs)
+                && (now - lastFetchMs) < intervalMs
+            ) {
+
+                console.log(
+                    "距离上次抓取不足 24 小时，跳过本次抓取。"
+                );
+
+
+                return {
+                    fetched: 0,
+                    errors: [],
+                    skipped: true
+                };
+            }
+        }
+
+
         const fallbackAfterMs =
             now
             - CONFIG.video.expiryHours
