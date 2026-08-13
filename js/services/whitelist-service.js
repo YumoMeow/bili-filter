@@ -38,6 +38,37 @@ import {
 } from "./bilibili-service.js";
 
 
+/**
+ * 等待一段时间。
+ *
+ * @param {number} ms
+ * @returns {Promise<void>}
+ */
+function sleep(ms) {
+
+    return new Promise(
+        resolve => {
+            setTimeout(resolve, ms);
+        }
+    );
+}
+
+
+/**
+ * 生成 [min, max] 之间的随机毫秒数。
+ *
+ * @param {number} min
+ * @param {number} max
+ * @returns {number}
+ */
+function randomDelay(min, max) {
+
+    return Math.floor(
+        min + Math.random() * (max - min)
+    );
+}
+
+
 export class WhitelistService {
 
     constructor(storageAdapter = storage) {
@@ -184,6 +215,9 @@ export class WhitelistService {
             const users = [];
 
 
+            let isFirst = true;
+
+
             for (const item of data.users) {
 
                 const mid =
@@ -195,22 +229,50 @@ export class WhitelistService {
                 }
 
 
-                let userInfo;
+                /*
+                 * 多个 UP 之间加随机间隔，
+                 * 降低触发 B 站风控的概率。
+                 */
+                if (!isFirst) {
 
-
-                try {
-
-                    userInfo =
-                        await bilibiliService
-                            .getUserInfo(mid);
-
-                } catch (error) {
-
-                    console.error(
-                        `初始化默认 UP 主 ${mid} 信息失败：`,
-                        error
+                    await sleep(
+                        randomDelay(500, 1500)
                     );
+                }
 
+
+                isFirst = false;
+
+
+                let userInfo = null;
+
+
+                for (let attempt = 0; attempt < 2; attempt++) {
+
+                    try {
+
+                        userInfo =
+                            await bilibiliService
+                                .getUserInfo(mid);
+
+                        break;
+
+                    } catch (error) {
+
+                        console.error(
+                            `初始化默认 UP 主 ${mid} 信息失败（第 ${attempt + 1} 次）：`,
+                            error
+                        );
+
+
+                        if (attempt === 0) {
+                            await sleep(1000);
+                        }
+                    }
+                }
+
+
+                if (!userInfo) {
 
                     userInfo = {
                         mid,
